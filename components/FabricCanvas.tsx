@@ -30,11 +30,23 @@ const FabricCanvas: React.FC<FabricCanvasProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
   
+  // Refs pour éviter de recréer le canevas quand ces valeurs changent
+  const toolRef = useRef(selectedTool);
+  const colorRef = useRef(strokeColor);
+  const widthRef = useRef(strokeWidth);
+
+  useEffect(() => {
+    toolRef.current = selectedTool;
+    colorRef.current = strokeColor;
+    widthRef.current = strokeWidth;
+  }, [selectedTool, strokeColor, strokeWidth]);
+
   const isDrawingRef = useRef(false);
   const startPointRef = useRef({ x: 0, y: 0 });
   const activeObjRef = useRef<any>(null);
   const arrowHeadRef = useRef<fabric.Triangle | null>(null);
 
+  // Initialisation unique du canevas
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -51,37 +63,39 @@ const FabricCanvas: React.FC<FabricCanvasProps> = ({
     canvas.on('mouse:down', (options) => {
       onActivate();
       
-      if (selectedTool === 'select') return;
+      const currentTool = toolRef.current;
+      if (currentTool === 'select') return;
 
       isDrawingRef.current = true;
-      // Utilisation de getScenePoint pour Fabric.js v6+
       const pointer = canvas.getScenePoint(options.e);
       startPointRef.current = { x: pointer.x, y: pointer.y };
 
-      if (selectedTool === 'rect') {
+      if (currentTool === 'rect') {
         const rect = new fabric.Rect({
           left: pointer.x,
           top: pointer.y,
           width: 0,
           height: 0,
           fill: 'transparent',
-          stroke: strokeColor,
-          strokeWidth: strokeWidth,
-          selectable: false
+          stroke: colorRef.current,
+          strokeWidth: widthRef.current,
+          selectable: false,
+          strokeUniform: true // Important pour le redimensionnement
         });
         activeObjRef.current = rect;
         canvas.add(rect);
-      } else if (selectedTool === 'arrow') {
+      } else if (currentTool === 'arrow') {
         const line = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
-          stroke: strokeColor,
-          strokeWidth: strokeWidth,
-          selectable: false
+          stroke: colorRef.current,
+          strokeWidth: widthRef.current,
+          selectable: false,
+          strokeLineCap: 'round'
         });
         
         const triangle = new fabric.Triangle({
-          width: 15 + strokeWidth * 2,
-          height: 15 + strokeWidth * 2,
-          fill: strokeColor,
+          width: 15 + widthRef.current * 2,
+          height: 15 + widthRef.current * 2,
+          fill: colorRef.current,
           originX: 'center',
           originY: 'center',
           selectable: false,
@@ -100,8 +114,9 @@ const FabricCanvas: React.FC<FabricCanvasProps> = ({
       const pointer = canvas.getScenePoint(options.e);
       const startX = startPointRef.current.x;
       const startY = startPointRef.current.y;
+      const currentTool = toolRef.current;
 
-      if (selectedTool === 'rect') {
+      if (currentTool === 'rect') {
         const rect = activeObjRef.current as fabric.Rect;
         rect.set({
           left: Math.min(startX, pointer.x),
@@ -109,7 +124,7 @@ const FabricCanvas: React.FC<FabricCanvasProps> = ({
           width: Math.abs(startX - pointer.x),
           height: Math.abs(startY - pointer.y)
         });
-      } else if (selectedTool === 'arrow') {
+      } else if (currentTool === 'arrow') {
         const line = activeObjRef.current as fabric.Line;
         line.set({ x2: pointer.x, y2: pointer.y });
 
@@ -135,15 +150,20 @@ const FabricCanvas: React.FC<FabricCanvasProps> = ({
       if (!isDrawingRef.current) return;
       isDrawingRef.current = false;
 
-      if (selectedTool === 'arrow' && activeObjRef.current && arrowHeadRef.current) {
+      const currentTool = toolRef.current;
+
+      if (currentTool === 'arrow' && activeObjRef.current && arrowHeadRef.current) {
         const line = activeObjRef.current;
         const triangle = arrowHeadRef.current;
+        
         canvas.remove(line, triangle);
         
+        // Création du groupe avec calcul des limites pour Fabric v6
         const group = new fabric.Group([line, triangle], {
           selectable: true,
           hasControls: true
         });
+        
         canvas.add(group);
         canvas.setActiveObject(group);
       } else if (activeObjRef.current) {
@@ -154,20 +174,19 @@ const FabricCanvas: React.FC<FabricCanvasProps> = ({
       activeObjRef.current = null;
       arrowHeadRef.current = null;
       canvas.requestRenderAll();
-      onToolFinished(); // Repasse l'outil sur 'select'
+      onToolFinished();
     });
 
     return () => {
       canvas.dispose();
       fabricRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTool, strokeColor, strokeWidth, width, height]);
+  }, [width, height]); // On ne réinitialise que si les dimensions du papier changent
 
-  // Gestion du curseur et de la sélection selon l'outil
+  // Gestion dynamique des curseurs et de la sélection sans recréer le canevas
   useEffect(() => {
-    if (!fabricRef.current) return;
     const canvas = fabricRef.current;
+    if (!canvas) return;
     
     if (selectedTool !== 'select') {
       canvas.defaultCursor = 'crosshair';
@@ -178,6 +197,7 @@ const FabricCanvas: React.FC<FabricCanvasProps> = ({
       canvas.selection = true;
       canvas.getObjects().forEach(obj => { obj.selectable = true; });
     }
+    canvas.requestRenderAll();
   }, [selectedTool]);
 
   useEffect(() => {
