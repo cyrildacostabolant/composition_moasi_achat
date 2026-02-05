@@ -1,0 +1,5 @@
+{
+  "name": "Composition MOASI Achats",
+  "description": "Outil de composition et d'annotation pour les documents d'achats MOASI avec gestion multi-pages et export PDF.",
+  "requestFramePermissions": []
+}
