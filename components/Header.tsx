@@ -15,7 +15,6 @@ const Header: React.FC<HeaderProps> = ({ color, title, onTitleChange, id }) => {
   const [fontSize, setFontSize] = useState(40);
 
   // Chaîne de référence pour garantir que 32 caractères tiennent toujours
-  // On utilise un mélange réaliste pour la mesure de sécurité
   const REFERENCE_TEXT = "MMMMWWWWMMMMWWWWMMMMWWWWMMMMWWWW"; 
 
   useEffect(() => {
@@ -27,11 +26,11 @@ const Header: React.FC<HeaderProps> = ({ color, title, onTitleChange, id }) => {
 
       if (refWidth === 0) return;
 
-      // Augmentation du ratio à 98% pour réduire les marges latérales
-      let targetSize = (containerWidth / refWidth) * 100 * 0.98;
+      // Ratio légèrement réduit à 0.95 pour donner de l'air sur les côtés
+      let targetSize = (containerWidth / refWidth) * 100 * 0.95;
       
-      // Augmentation du plafond à 90px (pour un bandeau de 140px, c'est bien plus impactant)
-      targetSize = Math.min(Math.max(targetSize, 24), 90); 
+      // Plafond à 80px pour éviter de toucher les bords haut/bas du bandeau de 140px
+      targetSize = Math.min(Math.max(targetSize, 20), 80); 
       
       setFontSize(targetSize);
     };
@@ -49,12 +48,12 @@ const Header: React.FC<HeaderProps> = ({ color, title, onTitleChange, id }) => {
   return (
     <div 
       id={id}
-      className="w-full flex items-center px-8 shadow-md transition-colors duration-300 overflow-hidden shrink-0 box-border"
+      className="w-full flex items-center px-8 shadow-md transition-colors duration-300 shrink-0 box-border overflow-hidden"
       style={{ backgroundColor: color, height: '140px' }}
       onClick={handleContainerClick}
     >
-      {/* Logo Section - Position fixe à gauche */}
-      <div className="flex-shrink-0 mr-6 flex items-center justify-center pointer-events-none">
+      {/* Logo Section */}
+      <div className="flex-shrink-0 mr-10 flex items-center justify-center pointer-events-none">
         <img 
           src={LOGO_BASE64_CLEAN} 
           alt="Logo" 
@@ -63,10 +62,10 @@ const Header: React.FC<HeaderProps> = ({ color, title, onTitleChange, id }) => {
         />
       </div>
 
-      {/* Title Section - Centrage horizontal et vertical avec marges réduites */}
+      {/* Title Section */}
       <div 
         ref={containerRef}
-        className="flex-grow h-full flex items-center justify-center relative cursor-text overflow-hidden"
+        className="flex-grow h-full flex items-center justify-center relative cursor-text"
       >
         {/* Layer 1: Hidden Measurement Span */}
         <span
@@ -77,19 +76,19 @@ const Header: React.FC<HeaderProps> = ({ color, title, onTitleChange, id }) => {
             {REFERENCE_TEXT}
         </span>
 
-        {/* Layer 2: Visual Display - Taille de police augmentée */}
+        {/* Layer 2: Visual Display - On enlève overflow-hidden ici pour éviter le tronquage vertical */}
         <div
-          className="w-full font-bold text-white uppercase font-sans text-center whitespace-nowrap overflow-hidden"
+          className="w-full font-bold text-white uppercase font-sans text-center whitespace-nowrap pointer-events-none"
           style={{ 
               fontSize: `${fontSize}px`, 
-              lineHeight: '1.1', // Ajusté pour un texte plus gros
-              padding: '0 5px' // Marge minimale
+              lineHeight: '1',
+              padding: '0 10px'
           }}
         >
-          {title || <span className="opacity-30">ENTREZ LE TITRE...</span>}
+          {title || <span className="opacity-30 italic">ENTREZ LE TITRE...</span>}
         </div>
 
-        {/* Layer 3: Invisible Input - Superposé avec text-align center */}
+        {/* Layer 3: Invisible Input - Calqué exactement sur le div du dessus */}
         <input
           ref={inputRef}
           type="text"
@@ -101,7 +100,8 @@ const Header: React.FC<HeaderProps> = ({ color, title, onTitleChange, id }) => {
           className="absolute inset-0 w-full bg-transparent border-none outline-none text-transparent caret-white font-bold uppercase font-sans text-center p-0 m-0"
           style={{ 
               fontSize: `${fontSize}px`,
-              lineHeight: '140px' 
+              lineHeight: '140px', // On garde ça uniquement pour l'input pour que le caret soit centré
+              padding: '0 10px'
           }}
         />
       </div>
