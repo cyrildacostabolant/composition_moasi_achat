@@ -220,17 +220,17 @@ const App: React.FC = () => {
                           height: A4_HEIGHT * zoom,
                           transition: 'width 0.2s ease-out, height 0.2s ease-out'
                       }}
-                      className="relative shrink-0"
+                      className={`relative shrink-0 overflow-hidden bg-white shadow-2xl transition-all duration-200 ${activePageId === page.id ? 'ring-4 ring-blue-500 ring-offset-4 ring-offset-gray-300' : ''}`}
+                      onClick={() => setActivePageId(page.id)}
                     >
                         <div 
                           id={`print-container-${page.id}`} 
-                          className={`bg-white shadow-2xl flex flex-col absolute top-0 left-0 origin-top-left transition-transform duration-200 ${activePageId === page.id ? 'ring-4 ring-blue-500 ring-offset-4 ring-offset-gray-300' : ''}`} 
+                          className={`bg-white flex flex-col absolute top-0 left-0 origin-top-left transition-transform duration-200`} 
                           style={{ 
                             width: A4_WIDTH, 
                             height: A4_HEIGHT,
                             transform: `scale(${zoom})`,
                           }} 
-                          onClick={() => setActivePageId(page.id)}
                         >
                             {isPageOne && <Header id={`header-${page.id}`} color={headerColor} title={headerTitle} onTitleChange={setHeaderTitle} />}
                             <FabricCanvas 
