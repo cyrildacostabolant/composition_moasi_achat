@@ -78,8 +78,8 @@ const App: React.FC = () => {
   };
 
   const generateFilename = (ext: string) => {
-    const sanitizedTitle = headerTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    return `${sanitizedTitle || 'document'}.${ext}`;
+    const sanitizedTitle = headerTitle.replace(/[^a-z0-9]/gi, '_').toUpperCase();
+    return `${sanitizedTitle || 'DOCUMENT'}.${ext.toUpperCase()}`;
   };
 
   const handleExportJPG = async () => {
