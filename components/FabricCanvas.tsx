@@ -191,11 +191,18 @@ const FabricCanvas: React.FC<FabricCanvasProps> = ({
     if (selectedTool !== 'select') {
       canvas.defaultCursor = 'crosshair';
       canvas.selection = false;
-      canvas.getObjects().forEach(obj => { obj.selectable = false; });
+      canvas.discardActiveObject();
+      canvas.getObjects().forEach(obj => { 
+        obj.selectable = false; 
+        obj.evented = false; 
+      });
     } else {
       canvas.defaultCursor = 'default';
       canvas.selection = true;
-      canvas.getObjects().forEach(obj => { obj.selectable = true; });
+      canvas.getObjects().forEach(obj => { 
+        obj.selectable = true; 
+        obj.evented = true; 
+      });
     }
     canvas.requestRenderAll();
   }, [selectedTool]);
